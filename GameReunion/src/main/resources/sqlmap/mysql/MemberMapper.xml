@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+    
+<mapper namespace="com.is.gr.dao.MemberMapper">
+
+    <select id="getSearchMemberList" parameterType="Map" resultType="com.is.gr.vo.Member">
+		SELECT
+			memberId,
+		    nickname,
+		    gradeCodeGroup,
+		    gradeCode,
+		    IF ( ( SELECT `status` FROM gr_friends WHERE fromMemberId = 'iskwon' AND toMemberId = memberId ) = 'Y', 'Y', 'N') AS isFriend,
+		    DATE_FORMAT(registeredDate, '%Y-%m-%d %H:%i:%s') AS registeredDate,
+        	DATE_FORMAT(modifiedDate, '%Y-%m-%d %H:%i:%s') AS modifiedDate,
+        	DATE_FORMAT(lastLoginDate, '%Y-%m-%d %H:%i:%s') AS lastLoginDate
+		FROM gr_member
+		WHERE memberId != #{memberId}
+		  AND nickname LIKE CONCAT('%', #{search}, '%')
+		  AND gradeCodeGroup = 0
+		  AND gradeCode = 1002
+		ORDER BY nickname ASC
+    </select>
+    
+    <select id="getMemberOfId" parameterType="String" resultType="com.is.gr.vo.Member">
+        SELECT
+        	memberId,
+        	password,
+        	passwordFailCnt,
+        	nickname,
+        	gradeCode,
+        	DATE_FORMAT(registeredDate, '%Y-%m-%d %H:%i:%s') AS registeredDate,
+        	DATE_FORMAT(modifiedDate, '%Y-%m-%d %H:%i:%s') AS modifiedDate,
+        	DATE_FORMAT(lastLoginDate, '%Y-%m-%d %H:%i:%s') AS lastLoginDate
+        FROM gr_member
+        WHERE memberId = #{memberId}
+    </select>
+    
+    <select id="getMemberOfNickname" parameterType="String" resultType="com.is.gr.vo.Member">
+        SELECT
+        	memberId,
+        	password,
+        	passwordFailCnt,
+        	nickname,
+        	gradeCode,
+        	DATE_FORMAT(registeredDate, '%Y-%m-%d %H:%i:%s') AS registeredDate,
+        	DATE_FORMAT(modifiedDate, '%Y-%m-%d %H:%i:%s') AS modifiedDate,
+        	DATE_FORMAT(lastLoginDate, '%Y-%m-%d %H:%i:%s') AS lastLoginDate
+        FROM gr_member
+        WHERE nickname = #{nickname}
+    </select>
+    
+    <select id="getCountOfMemberIdList" parameterType="List" resultType="Integer">
+		SELECT
+			COUNT(*)
+		FROM gr_member
+		WHERE memberId IN (
+						  <foreach collection="toMemberIdList" item="vo" separator=",">
+						      #{vo.toMemberId}
+						  </foreach>
+						  )
+    </select>
+    
+    <insert id="insertMember" parameterType="com.is.gr.vo.Member">
+		INSERT INTO gr_member (`memberId`, `password`, `passwordFailCnt`, `email`, `nickname`, `gradeCodeGroup`, `gradeCode`, `registeredDate`, `modifiedDate`, `lastLoginDate`)
+		VALUES (#{memberId}, #{password}, 0, NULL, #{nickname}, #{gradeCodeGroup}, #{gradeCode}, SYSDATE(), SYSDATE(), NULL)
+    </insert>
+    
+    <update id="updateWhenLoginSuccess" parameterType="String">
+        UPDATE gr_member
+        SET passwordFailCnt = 0,
+        	lastLoginDate = SYSDATE()
+        WHERE memberId = #{memberId}
+    </update>
+    
+    <update id="increasePasswordFailCnt" parameterType="String">
+        UPDATE gr_member
+        SET passwordFailCnt = passwordFailCnt + 1
+        WHERE memberId = #{memberId}
+    </update>
+    
+</mapper>

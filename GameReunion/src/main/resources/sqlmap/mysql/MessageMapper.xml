@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+    
+<mapper namespace="com.is.gr.dao.MessageMapper">
+
+    <select id="getReceivedMessageList" parameterType="Map" resultType="com.is.gr.vo.Message">
+        SELECT
+			rownum,
+		    seq,
+			fromMemberId,
+			fromNickname,
+		    toMemberId,
+			title,
+			contents,
+			confirmStatus,
+			registeredDate
+		FROM ( SELECT
+				   @ROWNUM := @ROWNUM + 1 AS rownum,
+				   T.seq AS seq,
+				   T.fromMemberId AS fromMemberId,
+				   T.fromNickname AS fromNickname,
+		           T.toMemberId AS toMemberId,
+				   T.title AS title,
+				   T.contents AS contents,
+				   T.confirmStatus AS confirmStatus,
+				   T.registeredDate AS registeredDate
+			   FROM ( SELECT @ROWNUM := 0 AS rownum) R,
+				    ( SELECT
+						  MES.seq,
+						  MES.fromMemberId,
+						  MEM.nickname AS fromNickname,
+						  MES.toMemberId,
+						  MES.title,
+						  MES.contents,
+						  MES.confirmStatus,
+						  DATE_FORMAT(MES.registeredDate, '%Y-%m-%d %H:%i:%s') AS registeredDate
+					  FROM gr_received_message MES,
+					  	   gr_member MEM
+					  WHERE MES.fromMemberId = MEM.memberId
+		  			    AND MES.toMemberId = #{memberId}
+		  			    <if test="search != null">
+		  			        AND ( MES.title LIKE CONCAT('%', #{search}, '%') OR MES.contents LIKE CONCAT('%', #{search}, '%') )
+		  			    </if>
+					  ORDER BY registeredDate DESC ) T
+			) RE
+		WHERE rownum BETWEEN #{start} AND #{end}
+    </select>
+    
+    <select id="getReceivedMessageListCount" parameterType="Map" resultType="Integer">
+		SELECT COUNT(*)
+		FROM gr_received_message
+		WHERE toMemberId = #{memberId}
+		  <if test="search != null">
+		  	 AND ( title LIKE CONCAT('%', #{search}, '%') OR contents LIKE CONCAT('%', #{search}, '%') )
+		  </if>
+    </select>
+    
+    <select id="getReceivedMessage" parameterType="com.is.gr.vo.Message" resultType="com.is.gr.vo.Message">
+        SELECT
+			MES.seq,
+			MES.fromMemberId,
+			MEM.nickname AS fromNickname,
+			MES.toMemberId,
+			MES.title,
+			MES.contents,
+			MES.confirmStatus,
+			DATE_FORMAT(MES.registeredDate, '%Y-%m-%d %H:%i:%s') AS registeredDate
+		FROM gr_received_message MES, gr_member MEM
+		WHERE MES.fromMemberId = MEM.memberId
+		  AND MES.seq = #{seq}
+    </select>
+    
+    <select id="getNoConfirmReceivedMessage" parameterType="com.is.gr.vo.Message" resultType="Integer">
+		SELECT
+			COUNT(*)
+		FROM gr_received_message
+		WHERE toMemberId = #{toMemberId}
+		  AND confirmStatus = #{confirmStatus}
+    </select>
+    
+    <insert id="insertReceivedMessage" parameterType="Map">
+		INSERT INTO gr_received_message (`seq`, `fromMemberId`, `toMemberId`, `title`, `contents`, `confirmStatus`, `registeredDate`)
+		VALUES 
+		<foreach collection="toMemberIdList" separator="," item="toMemberId" index="inx">
+			( IF ( (SELECT @MAX_SEQ := MAX(T.seq) FROM gr_received_message T) IS NULL,  0, @MAX_SEQ + (#{inx} + 1)), #{message.fromMemberId}, #{toMemberId}, #{message.title}, #{message.contents}, 'N', SYSDATE())
+		</foreach>
+    </insert>
+    
+    <delete id="deleteReceivedMessage" parameterType="com.is.gr.vo.Message">
+        DELETE FROM gr_received_message
+        WHERE seq = #{seq}
+    </delete>
+    
+    <update id="updateReceivedMessageConfirmStatus" parameterType="com.is.gr.vo.Message">
+		UPDATE gr_received_message
+		SET confirmStatus = #{confirmStatus}
+		WHERE seq = #{seq}
+    </update>
+    
+	<select id="getSentMessageList" parameterType="Map" resultType="com.is.gr.vo.Message">
+        SELECT
+			rownum,
+		    seq,
+			fromMemberId,
+		    toMemberId,
+		    toNickname,
+			title,
+			contents,
+			confirmStatus,
+			registeredDate
+		FROM ( SELECT
+				   @ROWNUM := @ROWNUM + 1 AS rownum,
+				   T.seq AS seq,
+				   T.fromMemberId AS fromMemberId,
+		           T.toMemberId AS toMemberId,
+		           T.toNickname AS toNickname,
+				   T.title AS title,
+				   T.contents AS contents,
+				   T.confirmStatus AS confirmStatus,
+				   T.registeredDate AS registeredDate
+			   FROM ( SELECT @ROWNUM := 0 AS rownum) R,
+				    ( SELECT
+						  MES.seq,
+						  MES.fromMemberId,
+						  MES.toMemberId,
+						  MEM.nickname AS toNickname,
+						  MES.title,
+						  MES.contents,
+						  MES.confirmStatus,
+						  DATE_FORMAT(MES.registeredDate, '%Y-%m-%d %H:%i:%s') AS registeredDate
+					  FROM gr_sent_message MES,
+					  	   gr_member MEM
+					  WHERE MES.toMemberId = MEM.memberId
+		  			    AND fromMemberId = #{memberId}
+		  			    <if test="search != null">
+		  			        AND ( MES.title LIKE CONCAT('%', #{search}, '%') OR MES.contents LIKE CONCAT('%', #{search}, '%') )
+		  			    </if>
+					  ORDER BY registeredDate DESC ) T
+			) RE
+		WHERE rownum BETWEEN #{start} AND #{end}
+    </select>
+    
+    <select id="getSentMessageListCount" parameterType="Map" resultType="Integer">
+		SELECT COUNT(*)
+		FROM gr_sent_message
+		WHERE fromMemberId = #{fromMemberId}
+		  <if test="search != null">
+		  	AND ( title LIKE CONCAT('%', #{search}, '%') OR contents LIKE CONCAT('%', #{search}, '%') )
+		  </if>
+    </select>
+    
+    <select id="getSentMessage" parameterType="com.is.gr.vo.Message" resultType="com.is.gr.vo.Message">
+        SELECT
+			MES.seq,
+			MES.fromMemberId,
+			MEM.nickname AS toNickname,
+			MES.toMemberId,
+			MES.title,
+			MES.contents,
+			MES.confirmStatus,
+			DATE_FORMAT(MES.registeredDate, '%Y-%m-%d %H:%i:%s') AS registeredDate
+		FROM gr_sent_message MES, gr_member MEM
+		WHERE MES.toMemberId = MEM.memberId
+		  AND MES.seq = #{seq}
+    </select>
+    
+    <insert id="insertSentMessage" parameterType="Map">
+        INSERT INTO gr_sent_message (`seq`, `fromMemberId`, `toMemberId`, `title`, `contents`, `confirmStatus`, `registeredDate`)
+		VALUES
+		<foreach collection="toMemberIdList" separator="," item="toMemberId" index="inx">
+			( IF ( (SELECT @MAX_SEQ := MAX(T.seq) FROM gr_sent_message T) IS NULL,  0, @MAX_SEQ + (#{inx} + 1)), #{message.fromMemberId}, #{toMemberId}, #{message.title}, #{message.contents}, 'N', SYSDATE())
+		</foreach>
+    </insert>
+    
+    <delete id="deleteSentMessage" parameterType="com.is.gr.vo.Message">
+        DELETE FROM gr_sent_message
+        WHERE seq = #{seq}
+    </delete>
+    
+    <update id="updateSentMessageConfirmStatus" parameterType="com.is.gr.vo.Message">
+		UPDATE gr_sent_message
+		SET confirmStatus = #{confirmStatus}
+		WHERE seq = #{seq}
+    </update>
+    
+</mapper>

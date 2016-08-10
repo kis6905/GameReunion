@@ -1,0 +1,137 @@
+/* Sticky footer styles
+-------------------------------------------------- */
+html {
+  position: relative;
+  min-height: 100%;
+}
+body {
+  /* Margin bottom by footer height */
+  margin-bottom: 100px;
+}
+.footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  /* Set the fixed height of the footer here */
+  height: 60px;
+  background-color: #f5f5f5;
+}
+
+
+/* Custom page CSS
+-------------------------------------------------- */
+/* Not required for template or sticky footer method. */
+
+body > .container {
+  padding: 60px 15px 0;
+}
+.container .text-muted {
+  margin: 20px 0;
+}
+
+.footer > .container {
+  padding-right: 15px;
+  padding-left: 15px;
+}
+
+code {
+  font-size: 80%;
+}
+
+
+/* commons
+ ------------------------------------ */
+#gameSearchArea {
+	padding-top: 50px;
+	padding-bottom: 50px;
+}
+
+.page-header > h3 > span:HOVER {
+	cursor: pointer;
+}
+
+.comment {
+	color: #FF9436;
+	font-weight: bold;
+}
+
+#listBtnArea {
+	text-align: right;
+}
+
+#writeBtnArea {
+	padding-top: 20px;
+	text-align: right;
+	padding-bottom: 50px;
+}
+
+#detailContentsArea {
+	min-height: 200px;
+}
+
+#detailBtnArea {
+	text-align: right;
+	padding-bottom: 40px;
+}
+
+
+/* main
+ ------------------------------------ */
+#bookmarkArea {
+	font-size: 20px;
+	padding-bottom: 50px;
+}
+#bookmarkItem:HOVER {
+	cursor: pointer;
+}
+
+
+/* game
+ ------------------------------------ */
+#gameItem {
+	text-align: center;
+}
+#gameItem:HOVER {
+	text-decoration: none;
+}
+
+#gameDetailArea {
+	text-align: center;
+}
+
+
+/* game > free board
+ ------------------------------------ */
+.table tr:HOVER {
+	cursor: pointer;
+}
+
+#detailCommentBtnArea {
+	text-align: right;
+	padding-top: 10px;
+	padding-bottom: 40px;
+}
+
+
+/* game > find board
+ ------------------------------------ */
+#findListBtnArea {
+	text-align: right;
+	padding-top: 10px;
+}
+
+
+/* friend
+ ------------------------------------ */
+#tabBtnArea, .friend-body-area {
+	padding-top: 30px;
+}
+
+#serarchResultArea {
+	padding-top: 30px;
+}
+
+.friend-body-area .list-group-item .icon {
+	float: right;
+}
+

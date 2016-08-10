@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+    
+<mapper namespace="com.is.gr.dao.BookmarkMapper">
+
+    <select id="getBookmark" parameterType="String" resultType="com.is.gr.vo.Game">
+        SELECT
+			GA.gameCode AS gameCode,
+		    GA.gameName AS gameName
+		FROM gr_bookmark B,
+		     gr_game GA
+		WHERE B.gameCode = GA.gameCode
+		  AND B.memberId = #{memberId}
+		  AND B.gameCode = #{gameCode}
+    </select>
+    
+    <select id="getBookmarkList" parameterType="String" resultType="com.is.gr.vo.Game">
+        SELECT
+			GA.gameCode AS gameCode,
+		    GA.gameName AS gameName
+		FROM gr_bookmark B,
+		     gr_game GA
+		WHERE B.gameCode = GA.gameCode
+		  AND B.memberId = #{memberId}
+    </select>
+    
+    <insert id="insertBookmark" parameterType="Map">
+		INSERT INTO gr_bookmark (`memberId`, `gameCode`)
+		VALUES (#{memberId}, #{gameCode})
+    </insert>
+    
+    <delete id="deleteBookmark" parameterType="Map">
+		DELETE FROM gr_bookmark
+		WHERE memberId = #{memberId}
+		  AND gameCode = #{gameCode}
+    </delete>
+    
+</mapper>

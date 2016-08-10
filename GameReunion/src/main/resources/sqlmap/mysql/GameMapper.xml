@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+    
+<mapper namespace="com.is.gr.dao.GameMapper">
+
+    <select id="getGameList" resultType="com.is.gr.vo.Game">
+        SELECT
+        	gameCode,
+        	gameName,
+        	description,
+        	registeredDate,
+        	modifiedDate
+        FROM gr_game
+        ORDER BY gameName ASC
+    </select>
+    
+    <select id="getSearchGameList" parameterType="Map" resultType="com.is.gr.vo.Game">
+        SELECT
+        	gameCode,
+        	gameName,
+        	description,
+        	registeredDate,
+        	modifiedDate
+        FROM gr_game
+        <if test="search != null">
+            WHERE gameName LIKE CONCAT('%', #{search}, '%')
+        </if>
+        ORDER BY gameName ASC
+    </select>
+    
+    <select id="getGameDetail" parameterType="String" resultType="com.is.gr.vo.Game">
+        SELECT
+        	gameCode,
+        	gameName,
+        	description,
+        	registeredDate,
+        	modifiedDate
+        FROM gr_game
+        WHERE gameCode = #{gameCode}
+    </select>
+    
+</mapper>

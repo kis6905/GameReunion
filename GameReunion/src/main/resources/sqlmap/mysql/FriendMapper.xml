@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+    
+<mapper namespace="com.is.gr.dao.FriendMapper">
+	
+    <select id="getFriendList" parameterType="String" resultType="com.is.gr.vo.Friend">
+		SELECT
+			F.fromMemberId AS fromMemberId,
+			F.toMemberId AS toMemberId,
+		    TM.nickname AS nickname,
+		    F.`status` AS `status`,
+		    DATE_FORMAT(F.requestedDate, '%Y-%m-%d %H:%i:%s') AS requestedDate
+		FROM gr_friends F,
+			 gr_member FM,
+		     gr_member TM
+		WHERE F.fromMemberId = FM.memberId
+		  AND F.toMemberId = TM.memberId
+		  AND F.fromMemberId = #{fromMemberId}
+		  AND F.`status` = 'Y'
+    </select>
+    
+    <select id="getOneFriend" parameterType="com.is.gr.vo.Friend" resultType="com.is.gr.vo.Friend">
+		SELECT
+			fromMemberId,
+			toMemberId,
+		    `status`,
+		    DATE_FORMAT(requestedDate, '%Y-%m-%d %H:%i:%s') AS requestedDate
+		FROM gr_friends
+		WHERE fromMemberId = #{fromMemberId}
+		  AND toMemberId = #{toMemberId}
+    </select>
+    
+    <select id="getReceiveList" parameterType="String" resultType="com.is.gr.vo.Friend">
+		SELECT
+			F.fromMemberId AS fromMemberId,
+			F.toMemberId AS toMemberId,
+		    FM.nickname AS nickname,
+		    F.`status` AS `status`,
+		    DATE_FORMAT(F.requestedDate, '%Y-%m-%d %H:%i:%s') AS requestedDate
+		FROM gr_friends F,
+			 gr_member FM
+		WHERE F.fromMemberId = FM.memberId
+		  AND F.toMemberId = #{memberId}
+		  AND F.`status` = 'S'
+    </select>
+    
+    <insert id="insertFriend" parameterType="com.is.gr.vo.Friend">
+		INSERT INTO gr_friends (`fromMemberId`, `toMemberId`, `status`, `requestedDate`)
+		VALUES (#{fromMemberId}, #{toMemberId}, 'S', SYSDATE())
+    </insert>
+    
+    <insert id="updateFriendStatus" parameterType="com.is.gr.vo.Friend">
+		INSERT INTO gr_friends (`fromMemberId`, `toMemberId`, `status`, `requestedDate`)
+		VALUES (#{fromMemberId}, #{toMemberId}, #{status}, SYSDATE())
+  		ON DUPLICATE KEY
+  		UPDATE status = #{status}
+    </insert>
+    
+    <delete id="deleteFriend" parameterType="com.is.gr.vo.Friend">
+		DELETE FROM gr_friends
+		WHERE (fromMemberId = #{fromMemberId} AND toMemberId = #{toMemberId})
+		   OR (fromMemberId = #{toMemberId} AND toMemberId = #{fromMemberId})
+    </delete>
+    
+</mapper>

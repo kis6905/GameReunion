@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+    
+<mapper namespace="com.is.gr.dao.FindBoardMapper">
+
+    <select id="getFindBoardList" parameterType="Map" resultType="com.is.gr.vo.FindBoard">
+		SELECT
+			rowCount,
+		    no,
+			gameCode,
+			serverName,
+			memberId,
+			nickname,
+			title,
+			contents,
+			registeredDate,
+			modifiedDate
+		FROM ( SELECT
+				   @ROW_COUNT := @ROW_COUNT + 1 AS rowCount,
+				   T.no AS no,
+				   T.gameCode AS gameCode,
+				   T.serverName AS serverName,
+				   T.memberId AS memberId,
+				   T.nickname AS nickname,
+				   T.title AS title,
+				   T.contents AS contents,
+				   T.registeredDate AS registeredDate,
+				   T.modifiedDate AS modifiedDate
+			   FROM ( SELECT @ROW_COUNT := 0 AS rowCount) R,
+				    ( SELECT
+						  B.no AS no,
+						  B.gameCode AS gameCode,
+						  B.serverName AS serverName,
+						  B.memberId AS memberId,
+						  M.nickname AS nickname,
+						  B.title AS title,
+						  B.contents AS contents,
+						  DATE_FORMAT(B.registeredDate, '%Y-%m-%d %H:%i:%s') AS registeredDate,
+						  DATE_FORMAT(B.registeredDate, '%Y-%m-%d %H:%i:%s') AS modifiedDate
+					  FROM gr_find_board B,
+						   gr_member M
+					  WHERE B.memberId = M.memberId
+					    AND B.gameCode = #{gameCode}
+					    <if test="serverName != null">
+					  	    AND B.serverName = #{serverName}
+					  	</if>
+					  	<if test="search != null">
+					  	    AND B.contents LIKE CONCAT('%', #{search}, '%')
+					  	</if>
+					  ORDER BY registeredDate DESC ) T ) RE
+		WHERE rowCount BETWEEN #{start} AND #{end}
+    </select>
+    
+    <select id="getFindBoardListCount" parameterType="Map" resultType="Integer">
+		SELECT COUNT(*)
+		FROM gr_find_board
+		WHERE gameCode = #{gameCode}
+		  <if test="serverName != null">
+			  AND B.serverName = #{serverName}
+		  </if>
+		  <if test="search != null">
+			  AND contents LIKE CONCAT('%', #{search}, '%')
+		  </if>
+    </select>
+    
+    <insert id="insertFindBoard" parameterType="com.is.gr.vo.FindBoard">
+		INSERT INTO gr_find_board (`no`, `gameCode`, `serverName`, `memberId`, `title`, `contents`, `registeredDate`, `modifiedDate`)
+		VALUES ( IF( (SELECT COUNT(*) FROM gr_find_board T) = 0, 1, (SELECT MAX(no) + 1 FROM gr_find_board T) ),
+			     #{gameCode}, #{serverName}, #{memberId}, #{title}, #{contents}, SYSDATE(), SYSDATE() )
+    </insert>
+    
+    <update id="updateFindBoard" parameterType="com.is.gr.vo.FindBoard">
+		UPDATE gr_find_board
+		SET serverName = #{serverName}, contents = #{contents}, modifiedDate = SYSDATE()
+		WHERE `no` = #{no}
+		  AND memberId = #{memberId}
+    </update>
+    
+    <delete id="deleteFindBoard" parameterType="com.is.gr.vo.FindBoard">
+		DELETE FROM gr_find_board
+		WHERE `no` = #{no}
+		  AND memberId = #{memberId}
+    </delete>
+    
+</mapper>

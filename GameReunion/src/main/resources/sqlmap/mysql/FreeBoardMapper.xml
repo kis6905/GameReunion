@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+    
+<mapper namespace="com.is.gr.dao.FreeBoardMapper">
+
+    <select id="getFreeBoardList" parameterType="Map" resultType="com.is.gr.vo.FreeBoard">
+		SELECT
+			rownum,
+		    no,
+			gameCode,
+			memberId,
+			nickname,
+			title,
+			contents,
+			( SELECT COUNT(*) FROM gr_free_board_comment WHERE boardNo = no ) AS commentCount,
+			registeredDate,
+			modifiedDate
+		FROM ( SELECT
+				   @ROWNUM := @ROWNUM + 1 AS rownum,
+				   T.no AS no,
+				   T.gameCode AS gameCode,
+				   T.memberId AS memberId,
+				   T.nickname AS nickname,
+				   T.title AS title,
+				   T.contents AS contents,
+				   T.registeredDate AS registeredDate,
+				   T.modifiedDate AS modifiedDate
+			   FROM ( SELECT @ROWNUM := 0 AS rownum) R,
+				    ( SELECT
+						  B.no AS no,
+						  B.gameCode AS gameCode,
+						  B.memberId AS memberId,
+						  M.nickname AS nickname,
+						  B.title AS title,
+						  B.contents AS contents,
+						  DATE_FORMAT(B.registeredDate, '%Y-%m-%d %H:%i:%s') AS registeredDate,
+						  DATE_FORMAT(B.registeredDate, '%Y-%m-%d %H:%i:%s') AS modifiedDate
+					  FROM gr_free_board B,
+						   gr_member M
+					  WHERE B.memberId = M.memberId
+					    AND B.gameCode = #{gameCode}
+					  	<if test="search != null">
+					  	    AND ( B.title LIKE CONCAT('%', #{search}, '%') OR B.contents LIKE CONCAT('%', #{search}, '%') )
+					  	</if>
+					  ORDER BY registeredDate DESC ) T ) RE
+		WHERE rownum BETWEEN #{start} AND #{end}
+    </select>
+    
+    <select id="getFreeBoardListCount" parameterType="Map" resultType="Integer">
+		SELECT COUNT(*)
+		FROM gr_free_board
+		WHERE gameCode = #{gameCode}
+		<if test="search != null">
+			AND ( title LIKE CONCAT('%', #{search}, '%') OR contents LIKE CONCAT('%', #{search}, '%') )
+		</if>
+    </select>
+    
+    <select id="getFreeBoard" parameterType="com.is.gr.vo.FreeBoard" resultType="com.is.gr.vo.FreeBoard">
+		SELECT
+			B.no AS no,
+			B.gameCode AS gameCode,
+			B.memberId AS memberId,
+			M.nickname AS nickname,
+			B.title AS title,
+			B.contents AS contents,
+			DATE_FORMAT(B.registeredDate, '%Y-%m-%d %H:%i:%s') AS registeredDate,
+			DATE_FORMAT(B.registeredDate, '%Y-%m-%d %H:%i:%s') AS modifiedDate
+		FROM gr_free_board B,
+			 gr_member M
+		WHERE B.memberId = M.memberId
+		  AND B.no = #{no}
+		  <if test="memberId != null">
+			  AND B.memberId = #{memberId}
+		  </if>
+    </select>
+    
+    <select id="getFreeBoardCommentList" parameterType="Integer" resultType="com.is.gr.vo.FreeBoardComment">
+		SELECT
+			C.commentNo,
+		    C.boardNo,
+		    C.memberId,
+		    M.nickname AS nickname,
+		    C.contents,
+		    DATE_FORMAT(C.registeredDate, '%Y-%m-%d %H:%i:%s') AS registeredDate,
+		    DATE_FORMAT(C.modifiedDate, '%Y-%m-%d %H:%i:%s') AS modifiedDate
+		FROM gr_free_board_comment C,
+			 gr_member M
+		WHERE C.memberId = M.memberId
+		  AND C.boardNo = #{boardNo}
+		ORDER BY C.registeredDate ASC
+    </select>
+    
+    <insert id="insertFreeBoard" parameterType="com.is.gr.vo.FreeBoard">
+		INSERT INTO gr_free_board (`no`, `gameCode`, `memberId`, `title`, `contents`, `registeredDate`, `modifiedDate`)
+		VALUES ( IF( (SELECT COUNT(*) FROM gr_free_board T) = 0, 1, (SELECT MAX(no) + 1 FROM gr_free_board T) ),
+			     #{gameCode}, #{memberId}, #{title}, #{contents}, SYSDATE(), SYSDATE() )
+    </insert>
+    
+    <update id="updateFreeBoard" parameterType="com.is.gr.vo.FreeBoard">
+		UPDATE gr_free_board
+		SET title = #{title}, contents = #{contents}, modifiedDate = SYSDATE()
+		WHERE `no` = #{no}
+		  AND memberId = #{memberId}
+    </update>
+    
+    <delete id="deleteFreeBoard" parameterType="com.is.gr.vo.FreeBoard">
+		DELETE FROM gr_free_board
+		WHERE `no` = #{no}
+		  AND memberId = #{memberId}
+    </delete>
+    
+    <insert id="insertFreeBoardComment" parameterType="com.is.gr.vo.FreeBoardComment">
+		INSERT INTO gr_free_board_comment (`commentNo`, `boardNo`, `memberId`, `contents`, `registeredDate`, `modifiedDate`)
+		VALUES ( IF( (SELECT COUNT(*) FROM gr_free_board_comment T) = 0, 1, (SELECT MAX(commentNo) + 1 FROM gr_free_board_comment T) ),
+				 #{boardNo}, #{memberId}, #{contents}, SYSDATE(), SYSDATE() )
+    </insert>
+    
+    <delete id="deleteFreeBoardComment" parameterType="com.is.gr.vo.FreeBoardComment">
+		DELETE FROM gr_free_board_comment
+		WHERE commentNo = #{commentNo}
+		  AND memberId = #{memberId}
+    </delete>
+    
+</mapper>
